@@ -21,6 +21,19 @@ def _oa():
         _client = OpenAI()
     return _client
 
+
+# Backend sin Postgres (JSON + embeddings precalculados). Se importa solo si
+# hace falta, porque arrastra numpy: con DATABASE_URL nunca se toca.
+_store_mod = None
+
+
+def _store():
+    global _store_mod
+    if _store_mod is None:
+        import local_store
+        _store_mod = local_store
+    return _store_mod
+
 SYSTEM = """Eres el asistente virtual de Seguros SURA Colombia. Ayudas a personas y empresas
 con información de seguros (personas, empresas) y ARL (riesgos laborales).
 
@@ -67,6 +80,8 @@ def embed(text):
 # ---------------------------------------------------------------- Retrieval
 def hybrid_search(conn, query, k=6, pool=20):
     """RRF de búsqueda vectorial + full-text. Devuelve lista de dicts."""
+    if conn is None:
+        return _store().hybrid_search(embed(query), query, k=k, pool=pool)
     vec = "[" + ",".join(map(str, embed(query))) + "]"
     with conn.cursor() as cur:
         cur.execute("""
@@ -120,6 +135,8 @@ def tool_buscar_seguros(conn, consulta):
 
 
 def tool_detalle_producto(conn, nombre):
+    if conn is None:
+        return _store().detalle_producto(nombre)
     with conn.cursor() as cur:
         cur.execute("""
             SELECT id, nombre, descripcion, url, tipo_persona, es_digital, cotizador_url
@@ -162,6 +179,8 @@ def tool_detalle_producto(conn, nombre):
 
 
 def tool_comparar_productos(conn, termino):
+    if conn is None:
+        return _store().comparar_productos(termino)
     with conn.cursor() as cur:
         cur.execute("""
             SELECT DISTINCT pr.id, pr.nombre, pr.url

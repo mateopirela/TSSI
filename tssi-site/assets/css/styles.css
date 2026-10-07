@@ -262,7 +262,7 @@ section { position: relative; }
    WIZARD / FUNNEL
    ===================================================================== */
 .wizard-wrap { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 0; border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-lux); border: 1px solid var(--cream-faint); }
-.wizard-aside { background: linear-gradient(165deg, var(--navy-700), var(--navy-900)); padding: 3rem; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
+.wizard-aside { background: linear-gradient(165deg, var(--navy-700), var(--navy-900)); color: var(--cream); padding: 3rem; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
 .wizard-aside .col-deco { position: absolute; right: -10px; bottom: -10px; opacity: 0.12; width: 220px; }
 .wizard-aside h2 { font-family: var(--display); font-size: clamp(1.7rem, 1.3rem + 1.3vw, 2.4rem); font-weight: 400; line-height: 1.06; }
 .wizard-steps { margin-top: 2rem; display: grid; gap: 1rem; }
@@ -599,3 +599,96 @@ section { position: relative; }
 .drawer-backdrop.open { opacity: 1; visibility: visible; }
 .drawer a { display: block; font-family: var(--display); font-size: 1.5rem; padding: 0.8rem 0; border-bottom: 1px solid var(--cream-faint); }
 .drawer-close { position: absolute; top: 1.6rem; right: 1.6rem; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--cream-faint); display: grid; place-items: center; }
+
+/* =====================================================================
+   RESPONSIVE — AFINADO MÓVIL
+   Bloque aditivo, al final del fichero a propósito: así gana en el cascade
+   sin reescribir ninguna regla de escritorio. Nada de aquí aplica por
+   encima de 1024px.
+   ===================================================================== */
+
+/* --- Tablet y móvil: el aside del wizard deja de desaparecer ----------
+   .wizard-aside iba a display:none por debajo de 1024px, y con él se
+   perdían los pasos (.wstep): el usuario veía una barra de progreso sin
+   saber en qué paso estaba ni cuántos quedaban. Vuelve, pero como franja
+   horizontal compacta en lugar de columna decorativa. */
+@media (max-width: 1024px) {
+  .wizard-aside { display: flex; flex-direction: row; align-items: center; padding: 1.15rem 1.3rem; }
+  .wizard-aside > div { display: flex; align-items: center; gap: 1rem; width: 100%; }
+  .wizard-aside h2 { display: none; }          /* el titular ya lo pone la sección */
+  .wizard-aside .col-deco { display: none; }   /* la deco es solo de escritorio */
+  .wizard-steps { margin-top: 0; display: flex; flex-direction: row; align-items: center; gap: 0.55rem; width: 100%; }
+  .wstep { gap: 0.5rem; font-size: 0.84rem; }
+}
+
+/* --- Teléfono -------------------------------------------------------- */
+@media (max-width: 680px) {
+  /* Aire: el wizard gastaba 3rem de padding por lado; en 320px de pantalla
+     eso se comía dos tercios del ancho útil. */
+  .wizard-main { padding: 1.4rem; min-height: 0; }
+  .wizard-progress { margin-bottom: 1.4rem; }
+  .panel h3 { font-size: 1.35rem; }
+  .prod-card { padding: 1.15rem; gap: 0.55rem; }
+  .prod-card h4 { font-size: 1.1rem; }
+
+  /* La bajada del logo caía a 8.8px: ilegible hasta como microtipografía de
+     marca. En móvil se retira y manda el nombre, que aguanta solo. */
+  .logo-txt span { display: none; }
+  .logo-txt b { font-size: 1.1rem; }
+  .logo { min-height: 44px; }
+
+  /* Suelo de legibilidad: estos venían entre 11.5px y 11.8px. */
+  .line-tag { font-size: 0.8rem; top: 1.2rem; left: 1.3rem; }
+  .line-card .chips span { font-size: 0.8rem; }
+  .need small { font-size: 0.8rem; }
+  .chat-srcs a { font-size: 0.78rem; }
+  .foot-bottom { font-size: 0.84rem; }
+
+  /* Objetivos táctiles: 44px de alto mínimo en todo lo pulsable. */
+  .wizard-back { min-height: 44px; display: inline-flex; align-items: center; padding-right: 0.5rem; }
+  .ramo-pill { padding: 0.6rem 1rem; min-height: 44px; display: inline-flex; align-items: center; }
+  .drawer a { min-height: 48px; display: flex; align-items: center; }
+  /* Enlaces del pie: en una sola columna quedaban a 33px de alto, pegados
+     unos a otros y muy fáciles de errar con el pulgar. */
+  .foot-col a { min-height: 44px; display: flex; align-items: center; }
+  .breadcrumb a { min-height: 44px; display: inline-flex; align-items: center; }
+
+  /* Fichas del catálogo: etiqueta de ramo y badges venían a 11.5px. */
+  .prod-card .ramo-lbl { font-size: 0.8rem; }
+  .prod-card .meta .tag { font-size: 0.8rem; }
+}
+
+/* --- Móvil estrecho -------------------------------------------------- */
+@media (max-width: 560px) {
+  /* Solo el paso activo lleva etiqueta: cuatro números y una etiqueta entran
+     de sobra en 320px. El font-size:0 colapsa el nodo de texto del .wstep sin
+     tocar el número, que lleva su propio tamaño en .wstep .n. */
+  .wstep { font-size: 0; gap: 0; }
+  .wstep.active { font-size: 0.84rem; gap: 0.5rem; }
+  .wizard-steps { justify-content: space-between; gap: 0.4rem; }
+
+  .section { padding-block: 2.75rem; }
+
+  /* El chat pasa a hoja inferior casi a pantalla completa. El alto usaba
+     100vh, que en Safari móvil incluye la barra del navegador y recortaba el
+     pie del panel; dvh mide el viewport real, con vh de reserva. */
+  .chat-panel {
+    inset: auto 0 0 0; width: 100%;
+    height: 86vh; height: 86dvh;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    border-left: none; border-right: none; border-bottom: none;
+    transform: translateY(100%); transform-origin: bottom center;
+  }
+  .chat-panel.open { transform: none; }
+  .chat-x { width: 44px; height: 44px; display: grid; place-items: center; margin-left: auto; }
+  .chat-input { padding: 0.9rem 1rem; }
+  .chat-input button { width: 44px; height: 44px; }
+}
+
+/* --- Teléfonos pequeños ---------------------------------------------- */
+@media (max-width: 400px) {
+  .logo img { width: 36px; height: 36px; }
+  .wizard-main { padding: 1.15rem; }
+  .prod-card { padding: 1rem; }
+  .opt { padding: 0.9rem; }
+}

@@ -73,6 +73,50 @@ Esto aplica `schema.sql`, carga `load.sql` (catálogo) y genera los 792 embeddin
 - Prueba el asistente (`/api/chat`): debe responder citando fuentes SURA.
 - Envía un lead de prueba desde el wizard → debe llegar el correo vía Resend.
 
+## Despliegue en Vercel
+
+Vercel importa una instancia de FastAPI llamada `app` desde un fichero con nombre
+soportado en la raíz (`main.py`, `app.py`, `index.py`, `server.py`, `wsgi.py`,
+`asgi.py`). Como la app vive en `tssi-site/serve.py` y `tssi-site` no es un nombre
+de módulo válido en Python (lleva guion), la raíz incluye `main.py`, que solo
+reexporta la app:
+
+```python
+sys.path.insert(0, os.path.join(HERE, "tssi-site"))
+from serve import app
+```
+
+`vercel.json` mantiene el HTML, `assets/`, `data/` y `sura-db/app/` dentro del
+bundle de la función (`includeFiles`), porque `serve.py` los lee en tiempo de
+ejecución.
+
+### Variables de entorno (Project Settings -> Environment Variables)
+
+| Variable         | Nota                                                          |
+|------------------|---------------------------------------------------------------|
+| `DATABASE_URL`   | Postgres con pgvector **accesible desde internet**. Un host de red privada (p. ej. `*.railway.internal`) no resuelve desde Vercel. |
+| `OPENAI_API_KEY` | Embeddings + generación.                                       |
+| `RESEND_API_KEY` | Notificación de leads por correo.                              |
+| `LEAD_NOTIFY_TO` | Opcional (default `mateopirela08@gmail.com`).                  |
+| `LEAD_FROM`      | Opcional (default `TSSI Leads <onboarding@resend.dev>`).       |
+
+La base tiene que estar sembrada (`sura-db/seed/seed_all.py`) contra esa misma
+`DATABASE_URL`, sobre una base vacía: `schema.sql` usa `CREATE TYPE`/`CREATE TABLE`
+sin `IF NOT EXISTS`, así que falla si se ejecuta dos veces.
+
+### Verificar
+
+`GET /api/health` devuelve qué claves están configuradas y si la base responde:
+
+```json
+{"openai_key":true,"resend_key":true,"database_url":true,
+ "db":"ok","chunks":792,"embedding_dims":1536}
+```
+
+`embedding_dims` tiene que ser **1536** (`text-embedding-3-small`). Si sale 768,
+la base quedó con los embeddings viejos de Ollama y la búsqueda vectorial falla
+por dimensiones incompatibles.
+
 ## Notas
 
 - **Leads:** se notifican por correo (Resend) y además se anexan a

@@ -1,0 +1,14 @@
+# Secretos locales (las claves van en Project Settings -> Environment Variables)
+.env
+*.env
+!.env.example
+**/leads.jsonl
+
+# Capturas y material de trabajo que no necesita el runtime
+*.jpeg
+logo/
+.firecrawl/
+.playwright-mcp/
+.claude/
+*.log
+__pycache__/
